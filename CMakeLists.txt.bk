@@ -9,11 +9,11 @@ message(STATUS "CMake ${CMAKE_VERSION} with max. ${Ncpu} threads")
 
 project(lsms LANGUAGES Fortran C CXX)
 
-# set(CMAKE_C_STANDARD 11)
-# set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# set(CMAKE_CXX_STANDARD 17)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -116,9 +116,9 @@ set_target_properties(lsmscore PROPERTIES
 target_link_libraries(lsmscore PUBLIC fmt::fmt)
 target_link_libraries(lsmscore PUBLIC Threads::Threads)
 
-# target_link_libraries(lsms_main_asa PUBLIC lsmscore)
-# target_link_libraries(lsms_main PUBLIC lsmscore)
-# target_link_libraries(lsms_wl PUBLIC lsmscore)
+target_link_libraries(lsms_main_asa PUBLIC lsmscore)
+target_link_libraries(lsms_main PUBLIC lsmscore)
+target_link_libraries(lsms_wl PUBLIC lsmscore)
 
 #
 # Add main source subdirectory
@@ -126,6 +126,7 @@ target_link_libraries(lsmscore PUBLIC Threads::Threads)
 add_subdirectory(src)
 
 add_subdirectory(include)
+
 
 
 # Find OpenMP library
@@ -324,7 +325,7 @@ target_include_directories(lsmscore PUBLIC ${CMAKE_SOURCE_DIR}/include)
 #
 # Enable Testing with CTest
 #
-option(BUILD_TESTING "Build the testing tree." OFF)
+option(BUILD_TESTING "Build the testing tree." ON)
 if (BUILD_TESTING)
     include(CTest)
     enable_testing()
@@ -340,97 +341,6 @@ if (LSMS_DEV_TESTS)
     message(STATUS "Building LSMS development test programs.")
 endif ()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../llvm-ir-cmake-utils/cmake")
-
-set(LLVM_BIN "/scr/studyztp/compiler/llvm-dir/bin")
-set(CMAKE_FORTRAN_COMPILER ${LLVM_BIN}/flang-new)
-set(CMAKE_C_COMPILER ${LLVM_BIN}/clang)
-set(CMAKE_CXX_COMPILER ${LLVM_BIN}/clang++)
-
-include(LLVMIRUtil)
-set_target_properties(lsmscore PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(lsms_main_asa PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(lsms_main PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(lsms_wl PROPERTIES LINKER_LANGUAGE CXX)
-
-# set_target_properties(lsmscore PROPERTIES EXCLUDE_FROM_ALL ON
-#     EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-# set_target_properties(lsms_main_asa PROPERTIES EXCLUDE_FROM_ALL ON
-#     EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-# set_target_properties(lsms_main PROPERTIES EXCLUDE_FROM_ALL ON
-#     EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-# set_target_properties(lsms_wl PROPERTIES EXCLUDE_FROM_ALL ON
-#     EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-
-llvmir_attach_bc_target(lsmscore_bc lsmscore)
-llvmir_attach_link_target(lsmscore_linked lsmscore_bc)
-llvmir_attach_link_target(lsmscore_lib lsmscore_linked)
-# add_dependencies(lsmscore_linked lsmscore_bc)
-# add_dependencies(lsmscore_lib lsmscore_linked)
 
 
-get_property(LINK_LIBRARIES TARGET lsmscore PROPERTY LINK_LIBRARIES)
-
-# Get original link libraries
-get_property(MAIN_ASA_LIBS TARGET lsms_main_asa PROPERTY LINK_LIBRARIES)
-# Add to target
-set_property(TARGET lsms_main_asa
-            PROPERTY LINK_LIBRARIES 
-            "${MAIN_ASA_LIBS};${LINK_LIBRARIES}")
-target_link_libraries(lsms_main_asa PUBLIC lsmscore_lib)
-llvmir_attach_bc_target(lsms_main_asa_bc lsms_main_asa)
-llvmir_attach_link_target(lsms_main_asa_linked lsms_main_asa_bc)
-# add_dependencies(lsms_main_asa_bc lsmscore_lib)
-# add_dependencies(lsms_main_asa_linked lsms_main_asa_bc)
-
-
-# Get original link libraries
-get_property(MAIN_LIBS TARGET lsms_main PROPERTY LINK_LIBRARIES)
-
-# Add to BC target
-set_property(TARGET lsms_main 
-            PROPERTY LINK_LIBRARIES 
-            "${MAIN_LIBS};${LINK_LIBRARIES}")
-target_link_libraries(lsms_main PUBLIC lsmscore_lib)
-llvmir_attach_bc_target(lsms_main_bc lsms_main)
-llvmir_attach_link_target(lsms_main_linked lsms_main_bc)
-# add_dependencies(lsms_main_bc lsmscore_lib)
-# add_dependencies(lsms_main_linked lsms_main_bc)
-
-
-# Get original link libraries
-get_property(WL_LIBS TARGET lsms_wl PROPERTY LINK_LIBRARIES)
-
-# Add to BC target
-set_property(TARGET lsms_wl 
-            PROPERTY LINK_LIBRARIES 
-            "${WL_LIBS};${LINK_LIBRARIES}")
-target_link_libraries(lsms_wl PUBLIC lsmscore_lib)
-llvmir_attach_bc_target(lsms_wl_bc lsms_wl)
-llvmir_attach_link_target(lsms_wl_linked lsms_wl_bc)
-# add_dependencies(lsms_wl_bc lsmscore_lib)
-# add_dependencies(lsms_wl_linked lsms_wl_bc)
-
-# set_target_properties(lsms_main_asa_linked PROPERTIES EXCLUDE_FROM_ALL OFF)
-# set_target_properties(lsms_main_linked PROPERTIES EXCLUDE_FROM_ALL OFF)
-# set_target_properties(lsms_wl_linked PROPERTIES EXCLUDE_FROM_ALL OFF)
-
-# Add to ALL target
-add_custom_target(all_ir_targets ALL
-    DEPENDS 
-        lsms_main_asa_linked
-        lsms_main_linked
-        lsms_wl_linked
-)
-
-llvmir_attach_executable(lsms_main_asa_exe lsms_main_asa_linked)
-llvmir_attach_executable(lsms_main_exe lsms_main_linked)
-llvmir_attach_executable(lsms_wl_exe lsms_wl_linked)
-
-add_custom_target(all_exe_targets ALL
-    DEPENDS 
-        lsms_main_asa_exe
-        lsms_main_exe
-        lsms_wl_exe
-)
 
