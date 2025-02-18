@@ -22,9 +22,9 @@ set(CMAKE_Fortran_FLAGS "-O3 -mtune=native -mcpu=native")
 
 # from here is what nugget needs
 
-set(NUGGET_PROCESS_TYPE "single-threaded-bbv-profiling")
+set(NUGGET_PROCESS_TYPE "lsms-ir-bb-analysis")
 set(REGION_LENGTH 100000000)
-set(TARGET_NAME single_threaded_bbv_profiling_bc)
+set(TARGET_NAME lsms_ir_bb_analysis_bc)
 
 set(NUGGET_LIBRARY_PATH "${CMAKE_CURRENT_LIST_DIR}/../../nugget-util/cmake")
 set(NUGGET_HOOKS_PATH "${CMAKE_CURRENT_LIST_DIR}/../../nugget-util/hook-helper")
