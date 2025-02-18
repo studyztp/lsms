@@ -312,7 +312,13 @@ if (LSMS_DEV_TESTS)
     message(STATUS "Building LSMS development test programs.")
 endif ()
 
-if(NUGGET_PROCESS_TYPE)
+if(DEFINED ENV{NUGGET_PROCESS_TYPE})
+    set(NUGGET_PROCESS_TYPE $ENV{NUGGET_PROCESS_TYPE})
+    if(${NUGGET_PROCESS_TYPE} STREQUAL "lsms-ir-bb-analysis-bc")
+        include(nugget-ir-bb-analysis-bc)
+    elseif(${NUGGET_PROCESS_TYPE} STREQUAL "lsms-ir-bb-analysis-exe")
+        include(nugget-ir-bb-analysis-exe)
+    endif()
     message(STATUS "Inside NUGGET_PROCESS_TYPE")
     message(STATUS "NUGGET_PROCESS_TYPE: ${NUGGET_PROCESS_TYPE}")
     list(APPEND CMAKE_MODULE_PATH "${NUGGET_LIBRARY_PATH}")
@@ -322,7 +328,7 @@ if(NUGGET_PROCESS_TYPE)
     llvmir_setup()
     llvmir_set_final_compiler(CXX)
 
-    if("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis")
+    if("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis-bc")
         message(STATUS "creating for lsms_ir_bb_analysis_bc")
         set(BB_INFO_OUTPUT_DIR ${CMAKE_BINARY_DIR}/bb-info-output)
         if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
@@ -341,6 +347,29 @@ if(NUGGET_PROCESS_TYPE)
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
             EXTRA_LIBS ${EXTRA_LIBS}
         )
+    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis-exe")
+        message(STATUS "creating for lsms_ir_bb_analysis_exe")
+
+        if(NOT LLC_CMD)
+            
+            if(LLC_EXTRATION_FILE_PATH AND EXISTS ${LLC_EXTRATION_FILE_PATH})
+                nugget_read_list(LLC_CMD ${LLC_EXTRATION_FILE_PATH})
+            else()
+                message(WARNING "LLC command not found in ${LLC_EXTRATION_FILE_PATH}")
+            endif()
+        endif()
+
+        nugget_compile_exe(
+            TARGET ${TARGET_NAME}
+            DEPEND_TARGETS lsms_main_asa lsmscore single-threaded-ir-bb-analysis
+            BB_FILE_PATH ${ANALYSIS_BC_FILE_PATH}
+            EXTRA_FLAGS ${EXTRA_FLAGS}
+            EXTRA_INCLUDES ${EXTRA_INCLUDES}
+            EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
+            EXTRA_LIBS ${EXTRA_LIBS}
+            LLC_CMD ${LLC_CMD}
+        )
+
     endif()
 endif()
 
