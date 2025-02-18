@@ -2,7 +2,7 @@ set(REGION_LENGTH 100000000)
 set(TARGET_NAME lsms_ir_bb_analysis_exe)
 
 set(ANALYSIS_BC_FILE_PATH "${CMAKE_BINARY_DIR}/llvm-bc/lsms_ir_bb_analysis_bc/lsms_ir_bb_analysis_bc.bc")
-set(LLC_EXTRATION_FILE_PATH "${CMAKE_CURRENT_LIST_DIR}/../nugget-util/cmake/check-cpu-features/llc-command.txt")
+set(LLC_EXTRATION_FILE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../nugget-util/cmake/check-cpu-features/llc-command.txt")
 if(NOT EXISTS ${ANALYSIS_BC_FILE_PATH})
     message(FATAL_ERROR "Analysis BC file not found: ${ANALYSIS_BC_FILE_PATH}")
 endif()

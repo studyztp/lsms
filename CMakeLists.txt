@@ -351,13 +351,18 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         message(STATUS "creating for lsms_ir_bb_analysis_exe")
 
         if(NOT LLC_CMD)
-            
             if(LLC_EXTRATION_FILE_PATH AND EXISTS ${LLC_EXTRATION_FILE_PATH})
                 nugget_read_list(LLC_CMD ${LLC_EXTRATION_FILE_PATH})
             else()
                 message(WARNING "LLC command not found in ${LLC_EXTRATION_FILE_PATH}")
             endif()
         endif()
+
+        if(LLC_CMD)
+            list(APPEND LLC_CMD -relocation-model=pic)
+        endif()
+
+        message(STATUS "LLC_CMD: ${LLC_CMD}")
 
         nugget_compile_exe(
             TARGET ${TARGET_NAME}
