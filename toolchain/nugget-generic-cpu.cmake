@@ -30,7 +30,8 @@ set(NUGGET_LIBRARY_PATH "${CMAKE_CURRENT_LIST_DIR}/../../nugget-util/cmake")
 set(NUGGET_HOOKS_PATH "${CMAKE_CURRENT_LIST_DIR}/../../nugget-util/hook-helper")
 set(NUGGET_C_HOOKS_PATH "${NUGGET_HOOKS_PATH}/c-hooks")
 
-set(LLVM_BIN "/home/ztpc/compiler/llvm-dir/bin")
+set(LLVM_ROOT "/home/ztpc/compiler/llvm-dir")
+set(LLVM_BIN "${LLVM_ROOT}/bin")
 
 set(MPI_INCLUDES
     -I/usr/lib/x86_64-linux-gnu/openmpi/include
@@ -47,7 +48,7 @@ set(MPI_LIBS
 )
 
 set(Fortran_LIB_PATHS
-    -L/scr/studyztp/compiler/llvm-dir/lib
+    -L${LLVM_ROOT}/lib
 )
 
 set(Fortran_LIBS
