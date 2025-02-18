@@ -9,23 +9,23 @@ message(STATUS "CMake ${CMAKE_VERSION} with max. ${Ncpu} threads")
 
 project(lsms LANGUAGES Fortran C CXX)
 
-# set(CMAKE_C_STANDARD 11)
-# set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_EXCLUDE_FROM_ALL ON) 
 
-# set(CMAKE_CXX_STANDARD 17)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Enable compilation for Accelerators
-option(USE_ACCELERATOR_CUDA_C "Use the cuda accelerator" OFF)
-# option(USE_BUILDKKRMATRIX_GPU "Build also the kkr matrix on GPU" ON)
+option(USE_ACCELERATOR_CUDA_C "Use the CUDA accelerator" OFF)
 option(USE_ACCELERATOR_HIP "Use HIP for accelerator" OFF)
-
-option(INCLUDE_ADDITIONAL_SYNCHRONIZE "Add additional syncronize in accelerator code" OFF)
+option(INCLUDE_ADDITIONAL_SYNCHRONIZE "Add additional synchronization in accelerator code" OFF)
 
 if (USE_ACCELERATOR_CUDA_C AND USE_ACCELERATOR_HIP)
-    message(FATAL_ERROR "Both ACCELERATOR_CUDA_C and ACCELERATOR_HIP defined.\nOnly ONE of these allowed!")
+    message(FATAL_ERROR "Both ACCELERATOR_CUDA_C and ACCELERATOR_HIP defined. Only ONE of these allowed!")
 endif ()
 
 if (USE_ACCELERATOR_CUDA_C)
@@ -36,7 +36,6 @@ endif ()
 if (USE_ACCELERATOR_HIP)
     message(STATUS "ACCELERATOR_HIP was activated")
 endif ()
-
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -56,7 +55,7 @@ message(STATUS "Build external libraries")
 include(lua)
 
 # Build LibXC in this project
-option(USE_LIBXC "Use the libxc libary" ON)
+option(USE_LIBXC "Use the libxc library" ON)
 if (USE_LIBXC)
     message(STATUS "LIBXC is used")
     include(libxc)
@@ -76,29 +75,17 @@ include(fmt)
 
 add_executable(lsms_main_asa)
 set_target_properties(lsms_main_asa PROPERTIES OUTPUT_NAME "lsms_asa")
-
-set_target_properties(lsms_main_asa
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        )
+set_target_properties(lsms_main_asa PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 add_executable(lsms_main)
 set_target_properties(lsms_main PROPERTIES OUTPUT_NAME "lsms")
-
-set_target_properties(lsms_main
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        )
+set_target_properties(lsms_main PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 add_executable(lsms_wl)
 set_target_properties(lsms_wl PROPERTIES OUTPUT_NAME "wl-lsms")
+set_target_properties(lsms_wl PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-set_target_properties(lsms_wl
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        )
-
-option(LEGACY_MONOPOLE "Use legacy for mono poles" OFF)
+option(LEGACY_MONOPOLE "Use legacy for monopoles" OFF)
 
 if(LEGACY_MONOPOLE)
     target_compile_definitions(lsms_main_asa PUBLIC LEGACY_MONOPOLE)
@@ -107,7 +94,6 @@ endif()
 
 # Core `lsms` library
 add_library(lsmscore STATIC)
-
 set_target_properties(lsmscore PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
@@ -116,17 +102,15 @@ set_target_properties(lsmscore PROPERTIES
 target_link_libraries(lsmscore PUBLIC fmt::fmt)
 target_link_libraries(lsmscore PUBLIC Threads::Threads)
 
-# target_link_libraries(lsms_main_asa PUBLIC lsmscore)
-# target_link_libraries(lsms_main PUBLIC lsmscore)
-# target_link_libraries(lsms_wl PUBLIC lsmscore)
+target_link_libraries(lsms_main_asa PUBLIC lsmscore)
+target_link_libraries(lsms_main PUBLIC lsmscore)
+target_link_libraries(lsms_wl PUBLIC lsmscore)
 
 #
 # Add main source subdirectory
 #
 add_subdirectory(src)
-
 add_subdirectory(include)
-
 
 # Find OpenMP library
 option(BUILD_WITH_OPENMP "Build with OpenMP" ON)
@@ -139,7 +123,6 @@ endif ()
 # CUDA
 #
 if (USE_ACCELERATOR_CUDA_C)
-
     target_compile_definitions(lsmscore PUBLIC ACCELERATOR_CUDA_C)
 
     option(CUDA_DEBUG "Debug CUDA routines" OFF)
@@ -147,13 +130,6 @@ if (USE_ACCELERATOR_CUDA_C)
     if (CUDA_DEBUG)
         target_compile_definitions(lsmscore PUBLIC "CUDA_DEBUG")
     endif ()
-
-    #    if (USE_BUILDKKRMATRIX_GPU)
-    #        message(STATUS "KKR Matrix build on GPU")
-    #        target_compile_definitions(lsmscore PUBLIC BUILDKKRMATRIX_GPU)
-    #    else ()
-    #        message(STATUS "KKR Matrix is not build on GPU")
-    #    endif ()
 
     if (BUILD_WITH_OPENMP)
         message(STATUS "OpenMP is also defined for GPU")
@@ -193,7 +169,6 @@ if (USE_ACCELERATOR_CUDA_C)
 endif ()
 
 if (USE_ACCELERATOR_HIP)
-
     target_compile_definitions(lsmscore PUBLIC ACCELERATOR_HIP)
 
     find_package(hip REQUIRED)
@@ -213,11 +188,10 @@ if (DEFINED MST_LINEAR_SOLVER_DEFAULT)
 endif ()
 
 if (DEFINED MST_BUILD_KKR_MATRIX_DEFAULT)
-    message(STATUS "Default kkr matrix build: " ${MST_BUILD_KKR_MATRIX_DEFAULT})
-    set(MST_BUILD_KKR_MATRIX_DEFAULT ${MST_BUILD_KKR_MATRIX_DEFAULT} CACHE STRING "Default linear solver")
+    message(STATUS "Default KKR matrix build: " ${MST_BUILD_KKR_MATRIX_DEFAULT})
+    set(MST_BUILD_KKR_MATRIX_DEFAULT ${MST_BUILD_KKR_MATRIX_DEFAULT} CACHE STRING "Default KKR matrix build")
     target_compile_definitions(lsmscore PUBLIC "MST_BUILD_KKR_MATRIX_DEFAULT=${MST_BUILD_KKR_MATRIX_DEFAULT}")
 endif ()
-
 
 option(ARCH_IBM "Is IBM architecture" OFF)
 
@@ -235,7 +209,7 @@ message(STATUS "Find HDF5")
 set(HDF5_PREFER_PARALLEL false)
 find_package(HDF5 REQUIRED)
 
-message(STATUS "HDF5 C Libaries: " "${HDF5_C_LIBRARIES}")
+message(STATUS "HDF5 C Libraries: " "${HDF5_C_LIBRARIES}")
 message(STATUS "HDF5 LIBRARIES: " "${HDF5_LIBRARIES}")
 message(STATUS "HDF5 INCLUDE DIRS: " "${HDF5_INCLUDE_DIRS}")
 message(STATUS "HDF5 Version: " "${HDF5_VERSION}")
@@ -300,7 +274,6 @@ else()
     message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
 
-
 # Lua
 target_link_libraries(lsmscore PUBLIC Lua::Lua)
 
@@ -319,7 +292,6 @@ target_compile_definitions(lsmscore PUBLIC HAS_BACKTRACE)
 
 # Include the common files
 target_include_directories(lsmscore PUBLIC ${CMAKE_SOURCE_DIR}/include)
-
 
 #
 # Enable Testing with CTest
@@ -340,97 +312,33 @@ if (LSMS_DEV_TESTS)
     message(STATUS "Building LSMS development test programs.")
 endif ()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../llvm-ir-cmake-utils/cmake")
+if(NUGGET_PROCESS_TYPE)
+    list(APPEND CMAKE_MODULE_PATH "${NUGGET_LIBRARY_PATH}")
+    list(APPEND CMAKE_MODULE_PATH "${NUGGET_C_HOOKS_PATH}")
+    include(Nugget)
+    include(hooks)
+    llvmir_setup()
+    llvmir_set_final_compiler(CXX)
 
-set(LLVM_BIN "/scr/studyztp/compiler/llvm-dir/bin")
-set(CMAKE_FORTRAN_COMPILER ${LLVM_BIN}/flang-new)
-set(CMAKE_C_COMPILER ${LLVM_BIN}/clang)
-set(CMAKE_CXX_COMPILER ${LLVM_BIN}/clang++)
-
-include(LLVMIRUtil)
-set_target_properties(lsmscore PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(lsms_main_asa PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(lsms_main PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(lsms_wl PROPERTIES LINKER_LANGUAGE CXX)
-
-# set_target_properties(lsmscore PROPERTIES EXCLUDE_FROM_ALL ON
-#     EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-# set_target_properties(lsms_main_asa PROPERTIES EXCLUDE_FROM_ALL ON
-#     EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-# set_target_properties(lsms_main PROPERTIES EXCLUDE_FROM_ALL ON
-#     EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-# set_target_properties(lsms_wl PROPERTIES EXCLUDE_FROM_ALL ON
-#     EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-
-llvmir_attach_bc_target(lsmscore_bc lsmscore)
-llvmir_attach_link_target(lsmscore_linked lsmscore_bc)
-llvmir_attach_link_target(lsmscore_lib lsmscore_linked)
-# add_dependencies(lsmscore_linked lsmscore_bc)
-# add_dependencies(lsmscore_lib lsmscore_linked)
-
-
-get_property(LINK_LIBRARIES TARGET lsmscore PROPERTY LINK_LIBRARIES)
-
-# Get original link libraries
-get_property(MAIN_ASA_LIBS TARGET lsms_main_asa PROPERTY LINK_LIBRARIES)
-# Add to target
-set_property(TARGET lsms_main_asa
-            PROPERTY LINK_LIBRARIES 
-            "${MAIN_ASA_LIBS};${LINK_LIBRARIES}")
-target_link_libraries(lsms_main_asa PUBLIC lsmscore_lib)
-llvmir_attach_bc_target(lsms_main_asa_bc lsms_main_asa)
-llvmir_attach_link_target(lsms_main_asa_linked lsms_main_asa_bc)
-# add_dependencies(lsms_main_asa_bc lsmscore_lib)
-# add_dependencies(lsms_main_asa_linked lsms_main_asa_bc)
-
-
-# Get original link libraries
-get_property(MAIN_LIBS TARGET lsms_main PROPERTY LINK_LIBRARIES)
-
-# Add to BC target
-set_property(TARGET lsms_main 
-            PROPERTY LINK_LIBRARIES 
-            "${MAIN_LIBS};${LINK_LIBRARIES}")
-target_link_libraries(lsms_main PUBLIC lsmscore_lib)
-llvmir_attach_bc_target(lsms_main_bc lsms_main)
-llvmir_attach_link_target(lsms_main_linked lsms_main_bc)
-# add_dependencies(lsms_main_bc lsmscore_lib)
-# add_dependencies(lsms_main_linked lsms_main_bc)
-
-
-# Get original link libraries
-get_property(WL_LIBS TARGET lsms_wl PROPERTY LINK_LIBRARIES)
-
-# Add to BC target
-set_property(TARGET lsms_wl 
-            PROPERTY LINK_LIBRARIES 
-            "${WL_LIBS};${LINK_LIBRARIES}")
-target_link_libraries(lsms_wl PUBLIC lsmscore_lib)
-llvmir_attach_bc_target(lsms_wl_bc lsms_wl)
-llvmir_attach_link_target(lsms_wl_linked lsms_wl_bc)
-# add_dependencies(lsms_wl_bc lsmscore_lib)
-# add_dependencies(lsms_wl_linked lsms_wl_bc)
-
-# set_target_properties(lsms_main_asa_linked PROPERTIES EXCLUDE_FROM_ALL OFF)
-# set_target_properties(lsms_main_linked PROPERTIES EXCLUDE_FROM_ALL OFF)
-# set_target_properties(lsms_wl_linked PROPERTIES EXCLUDE_FROM_ALL OFF)
-
-# Add to ALL target
-add_custom_target(all_ir_targets ALL
-    DEPENDS 
-        lsms_main_asa_linked
-        lsms_main_linked
-        lsms_wl_linked
-)
-
-llvmir_attach_executable(lsms_main_asa_exe lsms_main_asa_linked)
-llvmir_attach_executable(lsms_main_exe lsms_main_linked)
-llvmir_attach_executable(lsms_wl_exe lsms_wl_linked)
-
-add_custom_target(all_exe_targets ALL
-    DEPENDS 
-        lsms_main_asa_exe
-        lsms_main_exe
-        lsms_wl_exe
-)
+    if(NUGGET_PROCESS_TYPE STREQUAL "single-threaded-bbv-profiling-bc")
+        message(STATUS "creating for single-threaded-bbv-profiling-bc")
+        set(BB_INFO_OUTPUT_DIR ${CMAKE_BINARY_DIR}/bb-info-output)
+        if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
+            file(MAKE_DIRECTORY ${BB_INFO_OUTPUT_DIR})
+            if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
+                message(FATAL_ERROR "Could not create directory ${BB_INFO_OUTPUT_DIR}")
+            endif()
+        endif()
+        nugget_bbv_profiling_bc(
+            TARGET ${TARGET_NAME}
+            REGION_LENGTH ${REGION_LENGTH}
+            BB_INFO_OUTPUT_PATH ${BB_INFO_OUTPUT_DIR}/basic-block-info.txt
+            DEPEND_TARGETS lsms_main lsmscore single-threaded-ir-bb-analysis
+            EXTRA_FLAGS ${EXTRA_FLAGS}
+            EXTRA_INCLUDES ${EXTRA_INCLUDES}
+            EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
+            EXTRA_LIBS ${EXTRA_LIBS}
+        )
+    endif()
+endif()
 
