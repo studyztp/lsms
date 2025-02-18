@@ -99,6 +99,10 @@ feenableexcept (unsigned int excepts)
 }
 */
 
+#ifdef USE_NUGGET_LIB
+#include "common.h"
+#endif
+
 
 int main(int argc, char *argv[])
 {
@@ -544,6 +548,9 @@ int main(int argc, char *argv[])
   }
 
   auto lsmsEndInitTime = std::chrono::steady_clock::now();
+#ifdef USE_NUGGET_LIB
+  roi_begin_();
+#endif
   
 // -----------------------------------------------------------------------------
 //                                 MAIN SCF LOOP
@@ -831,7 +838,9 @@ int main(int argc, char *argv[])
   }
 
   double fomScale = calculateFomScaleDouble(comm, local);
-
+#ifdef USE_NUGGET_LIB
+  roi_end_();
+#endif
   auto lsmsEndTime = std::chrono::steady_clock::now();
   std::chrono::duration<double> lsmsRuntime = lsmsEndTime - lsmsStartTime;
   std::chrono::duration<double> lsmsInitTime = lsmsEndInitTime - lsmsStartTime;
