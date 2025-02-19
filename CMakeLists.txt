@@ -314,15 +314,23 @@ endif ()
 
 if(DEFINED ENV{NUGGET_PROCESS_TYPE})
     set(NUGGET_PROCESS_TYPE $ENV{NUGGET_PROCESS_TYPE})
-    if(${NUGGET_PROCESS_TYPE} STREQUAL "lsms-ir-bb-analysis-bc")
-        include(nugget-ir-bb-analysis-bc)
-    elseif(${NUGGET_PROCESS_TYPE} STREQUAL "lsms-ir-bb-analysis-exe")
-        include(nugget-ir-bb-analysis-exe)
+
+    if(NOT DEFINED ENV{NUGGET_CONFIG_FILE})
+        message(FATAL_ERROR "NUGGET_CONFIG_FILE not defined")
+    else()
+        set(NUGGET_CONFIG_FILE $ENV{NUGGET_CONFIG_FILE})
     endif()
+
     message(STATUS "Inside NUGGET_PROCESS_TYPE")
     message(STATUS "NUGGET_PROCESS_TYPE: ${NUGGET_PROCESS_TYPE}")
+    message(STATUS "NUGGET_CONFIG_FILE: ${NUGGET_CONFIG_FILE}")
+
+    include(${NUGGET_CONFIG_FILE})
+
     list(APPEND CMAKE_MODULE_PATH "${NUGGET_LIBRARY_PATH}")
     list(APPEND CMAKE_MODULE_PATH "${NUGGET_C_HOOKS_PATH}")
+    message(STATUS "CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+    
     include(Nugget)
     include(hooks)
     llvmir_setup()
@@ -374,6 +382,45 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             EXTRA_LIBS ${EXTRA_LIBS}
             LLC_CMD ${LLC_CMD}
         )
+
+    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-bc")
+        if(NOT DEFINED ENV{NUGGET_CONFIG_FILE})
+            message(FATAL_ERROR "NUGGET_CONFIG_FILE not defined")
+        else()
+            set(NUGGET_CONFIG_FILE $ENV{NUGGET_CONFIG_FILE})
+        endif()
+
+        set(BB_INFO_OUTPUT_DIR ${CMAKE_BINARY_DIR}/nugget-bb-info-output)
+        if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
+            file(MAKE_DIRECTORY ${BB_INFO_OUTPUT_DIR})
+            if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
+                message(FATAL_ERROR "Could not create directory ${BB_INFO_OUTPUT_DIR}")
+            endif()
+        endif()
+
+        set(ALL_NUGGET_TARGETS "")
+
+        foreach(rid ${NUGGET_RIDS})
+            set(RID_TARGET_NAME "${TARGET_NAME}-${rid}")
+            set(RID_MARKER_FILE "${REGION_MARKER_FILE_DIR}/${rid}${REGION_MARKER_FILE_NAME_BASE}")
+
+            nugget_nugget_bc(
+                TARGET ${RID_TARGET_NAME}
+                INPUT_FILE_PATH ${RID_MARKER_FILE}
+                BB_INFO_INPUT_PATH ${BB_INFO_FILE_PATH}
+                BB_INFO_OUTPUT_DIR ${BB_INFO_OUTPUT_DIR}/${rid}-bb-info-output.txt
+                DEPEND_TARGETS lsms_main lsmscore ${HOOK_TARGET}
+                EXTRA_FLAGS ${EXTRA_FLAGS}
+                EXTRA_INCLUDES ${EXTRA_INCLUDES}
+                EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
+                EXTRA_LIBS ${EXTRA_LIBS}
+            )
+
+            list(APPEND ALL_NUGGET_TARGETS ${RID_TARGET_NAME})
+
+        endforeach()
+
+        add_custom_target(${TARGET_NAME} ALL DEPENDS ${ALL_NUGGET_TARGETS})
 
     endif()
 endif()
