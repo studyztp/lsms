@@ -100,7 +100,10 @@ feenableexcept (unsigned int excepts)
 */
 
 #ifdef USE_NUGGET_LIB
-#include "common.h"
+extern "C" {
+  void roi_begin_();
+  void roi_end_();
+}
 #endif
 
 

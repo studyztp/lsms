@@ -349,11 +349,12 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             TARGET ${TARGET_NAME}
             REGION_LENGTH ${REGION_LENGTH}
             BB_INFO_OUTPUT_PATH ${BB_INFO_OUTPUT_DIR}/basic-block-info.txt
-            DEPEND_TARGETS lsms_main lsmscore single-threaded-ir-bb-analysis
+            DEPEND_TARGETS lsms_main lsmscore
             EXTRA_FLAGS ${EXTRA_FLAGS}
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
             EXTRA_LIBS ${EXTRA_LIBS}
+            HOOK_TARGET single-threaded-ir-bb-analysis
         )
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis-exe")
         message(STATUS "creating for lsms_ir_bb_analysis_exe")
@@ -384,44 +385,60 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         )
 
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-bc")
-        if(NOT DEFINED ENV{NUGGET_CONFIG_FILE})
-            message(FATAL_ERROR "NUGGET_CONFIG_FILE not defined")
-        else()
-            set(NUGGET_CONFIG_FILE $ENV{NUGGET_CONFIG_FILE})
-        endif()
-
-        set(BB_INFO_OUTPUT_DIR ${CMAKE_BINARY_DIR}/nugget-bb-info-output)
-        if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
-            file(MAKE_DIRECTORY ${BB_INFO_OUTPUT_DIR})
-            if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
-                message(FATAL_ERROR "Could not create directory ${BB_INFO_OUTPUT_DIR}")
+        nugget_nugget_bc(
+            TARGET ${TARGET_NAME}
+            HOOK_TARGET ${HOOK_TARGET}
+            SOURCE_BC_FILE_PATH ${SOURCE_BC_FILE_PATH}
+            INPUT_FILE_DIR ${INPUT_FILE_DIR}
+            INPUT_FILE_NAME_BASE ${INPUT_FILE_NAME_BASE}
+            BB_INFO_INPUT_PATH ${BB_INFO_INPUT_PATH}
+            BB_INFO_OUTPUT_DIR ${BB_INFO_OUTPUT_DIR}
+            LABEL_TARGET ${LABEL_TARGET}
+            LABEL_WARMUP ${LABEL_WARMUP}
+            ALL_NUGGET_RIDS ${ALL_NUGGET_RIDS}
+            DEPEND_TARGETS lsms_main_asa lsmscore
+            EXTRA_FLAGS ${EXTRA_FLAGS}
+            EXTRA_INCLUDES ${EXTRA_INCLUDES}
+            EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
+            EXTRA_LIBS ${EXTRA_LIBS}
+        )
+    
+    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-exe")
+        if(NOT LLC_CMD)
+            if(LLC_EXTRATION_FILE_PATH AND EXISTS ${LLC_EXTRATION_FILE_PATH})
+                nugget_read_list(LLC_CMD ${LLC_EXTRATION_FILE_PATH})
+            else()
+                message(WARNING "LLC command not found in ${LLC_EXTRATION_FILE_PATH}")
             endif()
         endif()
 
-        set(ALL_NUGGET_TARGETS "")
+        if(LLC_CMD)
+            list(APPEND LLC_CMD -relocation-model=pic)
+        endif()
 
-        foreach(rid ${NUGGET_RIDS})
-            set(RID_TARGET_NAME "${TARGET_NAME}-${rid}")
-            set(RID_MARKER_FILE "${REGION_MARKER_FILE_DIR}/${rid}${REGION_MARKER_FILE_NAME_BASE}")
+        message(STATUS "LLC_CMD: ${LLC_CMD}")
+        
+        if(NOT NUGGET_BC_FILE_DIR OR NOT NUGGET_BC_FILE_BASENAME)
+            message(FATAL_ERROR "NUGGET_BC_FILE_DIR or NUGGET_BC_FILE_BASENAME not defined")
+        endif()
 
-            nugget_nugget_bc(
-                TARGET ${RID_TARGET_NAME}
-                INPUT_FILE_PATH ${RID_MARKER_FILE}
-                BB_INFO_INPUT_PATH ${BB_INFO_FILE_PATH}
-                BB_INFO_OUTPUT_DIR ${BB_INFO_OUTPUT_DIR}/${rid}-bb-info-output.txt
-                DEPEND_TARGETS lsms_main lsmscore ${HOOK_TARGET}
+        set(ALL_TARGETS "")
+
+        foreach(rid ${ALL_NUGGET_RIDS})
+            nugget_compile_exe(
+                TARGET ${TARGET_NAME}_${rid}
+                DEPEND_TARGETS lsms_main_asa lsmscore ${HOOK_TARGET}
+                BB_FILE_PATH ${NUGGET_BC_FILE_DIR}/${NUGGET_BC_FILE_BASENAME}_${rid}/${NUGGET_BC_FILE_BASENAME}_${rid}.bc
                 EXTRA_FLAGS ${EXTRA_FLAGS}
                 EXTRA_INCLUDES ${EXTRA_INCLUDES}
                 EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
                 EXTRA_LIBS ${EXTRA_LIBS}
+                LLC_CMD ${LLC_CMD}
             )
-
-            list(APPEND ALL_NUGGET_TARGETS ${RID_TARGET_NAME})
-
+            list(APPEND ALL_TARGETS ${TARGET_NAME}_${rid})
         endforeach()
 
-        add_custom_target(${TARGET_NAME} ALL DEPENDS ${ALL_NUGGET_TARGETS})
-
+        add_custom_target(${TARGET_NAME} ALL DEPENDS ${ALL_TARGETS})
     endif()
 endif()
 
