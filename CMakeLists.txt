@@ -359,20 +359,6 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis-exe")
         message(STATUS "creating for lsms_ir_bb_analysis_exe")
 
-        if(NOT LLC_CMD)
-            if(LLC_EXTRATION_FILE_PATH AND EXISTS ${LLC_EXTRATION_FILE_PATH})
-                nugget_read_list(LLC_CMD ${LLC_EXTRATION_FILE_PATH})
-            else()
-                message(WARNING "LLC command not found in ${LLC_EXTRATION_FILE_PATH}")
-            endif()
-        endif()
-
-        if(LLC_CMD)
-            list(APPEND LLC_CMD -relocation-model=pic)
-        endif()
-
-        message(STATUS "LLC_CMD: ${LLC_CMD}")
-
         nugget_compile_exe(
             TARGET ${TARGET_NAME}
             DEPEND_TARGETS lsms_main_asa lsmscore single-threaded-ir-bb-analysis
@@ -404,19 +390,6 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         )
     
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-exe")
-        if(NOT LLC_CMD)
-            if(LLC_EXTRATION_FILE_PATH AND EXISTS ${LLC_EXTRATION_FILE_PATH})
-                nugget_read_list(LLC_CMD ${LLC_EXTRATION_FILE_PATH})
-            else()
-                message(WARNING "LLC command not found in ${LLC_EXTRATION_FILE_PATH}")
-            endif()
-        endif()
-
-        if(LLC_CMD)
-            list(APPEND LLC_CMD -relocation-model=pic)
-        endif()
-
-        message(STATUS "LLC_CMD: ${LLC_CMD}")
         
         if(NOT NUGGET_BC_FILE_DIR OR NOT NUGGET_BC_FILE_BASENAME)
             message(FATAL_ERROR "NUGGET_BC_FILE_DIR or NUGGET_BC_FILE_BASENAME not defined")
@@ -439,6 +412,12 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         endforeach()
 
         add_custom_target(${TARGET_NAME} ALL DEPENDS ${ALL_TARGETS})
+
+    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "rebuild-deps")
+        rebuild_depend_targets_libraries(
+            TARGET rebuild_deps 
+            DEPEND_TARGETS lsms_main_asa lsmscore
+        )
     endif()
 endif()
 
