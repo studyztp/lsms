@@ -336,6 +336,17 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
     llvmir_setup()
     llvmir_set_final_compiler(CXX)
 
+    if(INCLUDE_LIBRARIES_IN_BC)
+        get_all_libraries_target(
+            TARGET_LIST all_libraries_list
+            DEPEND_TARGETS lsms_main_asa lsmscore
+        )
+        foreach(lib ${all_libraries_list})
+            message(STATUS "Library: ${lib}")
+            print_target_properties(${lib})
+        endforeach()
+    endif()
+
     if("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis-bc")
         message(STATUS "creating for lsms_ir_bb_analysis_bc")
         set(BB_INFO_OUTPUT_DIR ${CMAKE_BINARY_DIR}/bb-info-output)
@@ -345,11 +356,12 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
                 message(FATAL_ERROR "Could not create directory ${BB_INFO_OUTPUT_DIR}")
             endif()
         endif()
+
         nugget_bbv_profiling_bc(
             TARGET ${TARGET_NAME}
             REGION_LENGTH ${REGION_LENGTH}
             BB_INFO_OUTPUT_PATH ${BB_INFO_OUTPUT_DIR}/basic-block-info.txt
-            DEPEND_TARGETS lsms_main lsmscore
+            DEPEND_TARGETS ${all_libraries_list} lsms_main lsmscore 
             EXTRA_FLAGS ${EXTRA_FLAGS}
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
@@ -361,7 +373,7 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
 
         nugget_compile_exe(
             TARGET ${TARGET_NAME}
-            DEPEND_TARGETS lsms_main_asa lsmscore single-threaded-ir-bb-analysis
+            DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list} single-threaded-ir-bb-analysis
             BB_FILE_PATH ${ANALYSIS_BC_FILE_PATH}
             EXTRA_FLAGS ${EXTRA_FLAGS}
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
@@ -382,7 +394,7 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             LABEL_TARGET ${LABEL_TARGET}
             LABEL_WARMUP ${LABEL_WARMUP}
             ALL_NUGGET_RIDS ${ALL_NUGGET_RIDS}
-            DEPEND_TARGETS lsms_main_asa lsmscore
+            DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list}
             EXTRA_FLAGS ${EXTRA_FLAGS}
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
@@ -400,7 +412,7 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         foreach(rid ${ALL_NUGGET_RIDS})
             nugget_compile_exe(
                 TARGET ${TARGET_NAME}_${rid}
-                DEPEND_TARGETS lsms_main_asa lsmscore ${HOOK_TARGET}
+                DEPEND_TARGETS lsms_main_asa lsmscore ${HOOK_TARGET} ${all_libraries_list}
                 BB_FILE_PATH ${NUGGET_BC_FILE_DIR}/${NUGGET_BC_FILE_BASENAME}_${rid}/${NUGGET_BC_FILE_BASENAME}_${rid}.bc
                 EXTRA_FLAGS ${EXTRA_FLAGS}
                 EXTRA_INCLUDES ${EXTRA_INCLUDES}
