@@ -375,13 +375,14 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
 
         nugget_compile_exe(
             TARGET ${TARGET_NAME}
-            DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list} single-threaded-ir-bb-analysis
-            BB_FILE_PATH ${ANALYSIS_BC_FILE_PATH}
+            DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list}
+            BB_FILE_PATH ${BB_FILE_PATH}
             EXTRA_FLAGS ${EXTRA_FLAGS}
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
             EXTRA_LIBS ${EXTRA_LIBS}
             LLC_CMD ${LLC_CMD}
+            EXTRACT_HOOK ${EXTRACT_HOOK}
         )
 
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-bc")
