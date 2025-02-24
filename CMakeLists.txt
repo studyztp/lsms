@@ -384,6 +384,7 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             LLC_CMD ${LLC_CMD}
             EXTRACT_FUNCTIONS ${EXTRACT_FUNCTIONS}
             SHRUNK_BC ${SHRUNK_BC}
+            FINAL_BB_FILE_PATHS ${FINAL_BB_FILE_PATHS}
         )
 
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-bc")
