@@ -376,15 +376,15 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         nugget_compile_exe(
             TARGET ${TARGET_NAME}
             DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list}
-            BB_FILE_PATH ${BB_FILE_PATH}
+            BC_FILE_PATH ${BC_FILE_PATH}
             EXTRA_FLAGS ${EXTRA_FLAGS}
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
             EXTRA_LIBS ${EXTRA_LIBS}
             LLC_CMD ${LLC_CMD}
             EXTRACT_FUNCTIONS ${EXTRACT_FUNCTIONS}
-            SHRUNK_BC ${SHRUNK_BC}
-            FINAL_BB_FILE_PATHS ${FINAL_BB_FILE_PATHS}
+            ADDITIONAL_OPT ${ADDITIONAL_OPT}
+            FINAL_BC_FILE_PATHS ${FINAL_BC_FILE_PATHS}
         )
 
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-bc")
@@ -392,14 +392,15 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             TARGET ${TARGET_NAME}
             HOOK_TARGET ${HOOK_TARGET}
             SOURCE_BC_FILE_PATH ${SOURCE_BC_FILE_PATH}
+            HOOK_BC_FILE_PATH ${HOOK_BC_FILE_PATH}
             INPUT_FILE_DIR ${INPUT_FILE_DIR}
             INPUT_FILE_NAME_BASE ${INPUT_FILE_NAME_BASE}
             BB_INFO_INPUT_PATH ${BB_INFO_INPUT_PATH}
             BB_INFO_OUTPUT_DIR ${BB_INFO_OUTPUT_DIR}
             LABEL_TARGET ${LABEL_TARGET}
             LABEL_WARMUP ${LABEL_WARMUP}
-            ALL_NUGGET_RIDS ${ALL_NUGGET_RIDS}
             DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list}
+            ALL_NUGGET_RIDS ${ALL_NUGGET_RIDS}
             EXTRA_FLAGS ${EXTRA_FLAGS}
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
@@ -415,21 +416,55 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         set(ALL_TARGETS "")
 
         foreach(rid ${ALL_NUGGET_RIDS})
+            set(RID_BC_FILE_PATH ${NUGGET_BC_FILE_DIR}/${NUGGET_BC_FILE_BASENAME}_${rid}/${NUGGET_BC_FILE_BASENAME}_${rid}.bc)
+            if(NOT EXISTS ${RID_BC_FILE_PATH})
+                message(FATAL_ERROR "BC file not found: ${RID_BC_FILE_PATH}")
+            endif()
             nugget_compile_exe(
                 TARGET ${TARGET_NAME}_${rid}
+                BC_FILE_PATH ${RID_BC_FILE_PATH}
                 DEPEND_TARGETS lsms_main_asa lsmscore ${HOOK_TARGET} ${all_libraries_list}
-                BB_FILE_PATH ${NUGGET_BC_FILE_DIR}/${NUGGET_BC_FILE_BASENAME}_${rid}/${NUGGET_BC_FILE_BASENAME}_${rid}.bc
+                ADDITIONAL_OPT ${ADDITIONAL_OPT}
                 EXTRA_FLAGS ${EXTRA_FLAGS}
                 EXTRA_INCLUDES ${EXTRA_INCLUDES}
                 EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
                 EXTRA_LIBS ${EXTRA_LIBS}
                 LLC_CMD ${LLC_CMD}
+                EXTRACT_FUNCTIONS ${EXTRACT_FUNCTIONS}
+                FINAL_BC_FILE_PATHS ${FINAL_BC_FILE_PATHS}
             )
             list(APPEND ALL_TARGETS ${TARGET_NAME}_${rid})
         endforeach()
 
         add_custom_target(${TARGET_NAME} ALL DEPENDS ${ALL_TARGETS})
 
+    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-naive-bc")
+        nugget_naive_bc(
+            TARGET ${TARGET_NAME}
+            HOOK_TARGET ${HOOK_TARGET}
+            SOURCE_BC_FILE_PATH ${SOURCE_BC_FILE_PATH}
+            HOOK_BC_FILE_PATH ${HOOK_BC_FILE_PATH}
+            DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list}
+            EXTRA_FLAGS ${EXTRA_FLAGS}
+            EXTRA_INCLUDES ${EXTRA_INCLUDES}
+            EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
+            EXTRA_LIBS ${EXTRA_LIBS}
+        )
+
+    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-naive-exe")
+        nugget_compile_exe(
+            TARGET ${TARGET_NAME}
+            BC_FILE_PATH ${BC_FILE_PATH}
+            DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list}
+            ADDITIONAL_OPT ${ADDITIONAL_OPT}
+            EXTRA_FLAGS ${EXTRA_FLAGS}
+            EXTRA_INCLUDES ${EXTRA_INCLUDES}
+            EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
+            EXTRA_LIBS ${EXTRA_LIBS}
+            LLC_CMD ${LLC_CMD}
+            EXTRACT_FUNCTIONS ${EXTRACT_FUNCTIONS}
+            FINAL_BC_FILE_PATHS ${FINAL_BC_FILE_PATHS}
+        )
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "rebuild-deps")
         rebuild_depend_targets_libraries(
             TARGET rebuild_deps 
