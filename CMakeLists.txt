@@ -370,7 +370,7 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             EXTRA_LIBS ${EXTRA_LIBS}
             HOOK_TARGET single-threaded-ir-bb-analysis
         )
-    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis-exe")
+    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-analysis-exe")
         message(STATUS "creating for lsms_ir_bb_analysis_exe")
 
         nugget_compile_exe(
