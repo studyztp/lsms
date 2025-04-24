@@ -368,7 +368,7 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
             EXTRA_LIBS ${EXTRA_LIBS}
-            HOOK_TARGET single-threaded-ir-bb-analysis
+            HOOK_TARGET ${HOOK_TARGET}
         )
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-analysis-exe")
         message(STATUS "creating for lsms_ir_bb_analysis_exe")
