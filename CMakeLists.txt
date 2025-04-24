@@ -9,7 +9,7 @@ message(STATUS "CMake ${CMAKE_VERSION} with max. ${Ncpu} threads")
 
 project(lsms LANGUAGES Fortran C CXX)
 
-set(CMAKE_EXCLUDE_FROM_ALL ON) 
+set(CMAKE_EXCLUDE_FROM_ALL ON)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -369,6 +369,7 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
             EXTRA_LIBS ${EXTRA_LIBS}
             HOOK_TARGET ${HOOK_TARGET}
+            OPT_CMD ${OPT_CMD}
         )
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-analysis-exe")
         message(STATUS "creating for lsms_ir_bb_analysis_exe")
