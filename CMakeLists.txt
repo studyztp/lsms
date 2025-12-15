@@ -326,6 +326,7 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
     message(STATUS "Inside NUGGET_PROCESS_TYPE")
     message(STATUS "NUGGET_PROCESS_TYPE: ${NUGGET_PROCESS_TYPE}")
     message(STATUS "NUGGET_CONFIG_FILE: ${NUGGET_CONFIG_FILE}")
+    message(STATUS "NUGGET TARGET NAME: ${TARGET_NAME}")
 
     include(${NUGGET_CONFIG_FILE})
 
@@ -369,18 +370,12 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
             EXTRA_LIBS ${EXTRA_LIBS}
-<<<<<<< Updated upstream
-            HOOK_TARGET ${HOOK_TARGET}
-            OPT_CMD ${OPT_CMD}
-        )
-    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-analysis-exe")
-=======
             HOOK_TARGET single-threaded-ir-bb-analysis
             OPT_CMD ${OPT_CMD}
         )
 
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis-exe")
->>>>>>> Stashed changes
+
         message(STATUS "creating for lsms_ir_bb_analysis_exe")
 
         if("${BC_FILE_PATH}" STREQUAL "")
