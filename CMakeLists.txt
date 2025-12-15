@@ -312,6 +312,8 @@ if (LSMS_DEV_TESTS)
     message(STATUS "Building LSMS development test programs.")
 endif ()
 
+# Nugget Protocol Integration
+
 if(DEFINED ENV{NUGGET_PROCESS_TYPE})
     set(NUGGET_PROCESS_TYPE $ENV{NUGGET_PROCESS_TYPE})
 
@@ -358,7 +360,6 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
                 message(FATAL_ERROR "Could not create directory ${BB_INFO_OUTPUT_DIR}")
             endif()
         endif()
-
         nugget_bbv_profiling_bc(
             TARGET ${TARGET_NAME}
             REGION_LENGTH ${REGION_LENGTH}
@@ -368,16 +369,33 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
             EXTRA_LIBS ${EXTRA_LIBS}
+<<<<<<< Updated upstream
             HOOK_TARGET ${HOOK_TARGET}
             OPT_CMD ${OPT_CMD}
         )
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-analysis-exe")
+=======
+            HOOK_TARGET single-threaded-ir-bb-analysis
+            OPT_CMD ${OPT_CMD}
+        )
+
+    elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-ir-bb-analysis-exe")
+>>>>>>> Stashed changes
         message(STATUS "creating for lsms_ir_bb_analysis_exe")
 
+        if("${BC_FILE_PATH}" STREQUAL "")
+            message(FATAL_ERROR "No BC_FILE_PATH or BC_FILE_BASENAME")
+        endif()
+
+        set(BENCH_BC_FILE_PATH ${BC_FILE_PATH}/${BC_FILE_BASENAME}/${BC_FILE_BASENAME}.bc)
+        if(NOT EXISTS ${BENCH_BC_FILE_PATH})
+            message(FATAL_ERROR "BC file ${BENCH_BC_FILE_PATH} does not exist")
+        endif()
+        message("USING ${LINKER_LANG} to compile the final executable")
         nugget_compile_exe(
             TARGET ${TARGET_NAME}
             DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list}
-            BC_FILE_PATH ${BC_FILE_PATH}
+            BC_FILE_PATH ${BENCH_BC_FILE_PATH}
             EXTRA_FLAGS ${EXTRA_FLAGS}
             EXTRA_INCLUDES ${EXTRA_INCLUDES}
             EXTRA_LIB_PATHS ${EXTRA_LIB_PATHS}
@@ -385,17 +403,33 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
             LLC_CMD ${LLC_CMD}
             EXTRACT_FUNCTIONS ${EXTRACT_FUNCTIONS}
             ADDITIONAL_OPT ${ADDITIONAL_OPT}
-            FINAL_BC_FILE_PATHS ${FINAL_BC_FILE_PATHS}
+            FINAL_BC_FILE_PATHS ""
         )
 
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-bc")
+        if("${SOURCE_BC_FILE_PATH}" STREQUAL "" OR "${SOURCE_BC_FILE_BASENAME}" STREQUAL "")
+            message(FATAL_ERROR "No BC_FILE_PATH or BC_FILE_BASENAME")
+        endif()
+        set(BENCH_BC_FILE_PATH ${SOURCE_BC_FILE_PATH}/${SOURCE_BC_FILE_BASENAME}_source_opted_bc/${SOURCE_BC_FILE_BASENAME}_source_opted_bc.bc)
+        if(NOT EXISTS ${BENCH_BC_FILE_PATH})
+            message(FATAL_ERROR "BC file ${BENCH_BC_FILE_PATH} does not exist")
+        endif()
+        if (NOT ALL_NUGGET_RIDS)
+            message(FATAL_ERROR "No ALL_NUGGET_RIDS defined")
+        endif()
+        if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
+            file(MAKE_DIRECTORY ${BB_INFO_OUTPUT_DIR})
+            if(NOT EXISTS ${BB_INFO_OUTPUT_DIR})
+                message(FATAL_ERROR "Could not create directory ${BB_INFO_OUTPUT_DIR}")
+            endif()
+        endif()
         nugget_nugget_bc(
             TARGET ${TARGET_NAME}
             HOOK_TARGET ${HOOK_TARGET}
-            SOURCE_BC_FILE_PATH ${SOURCE_BC_FILE_PATH}
+            SOURCE_BC_FILE_PATH ${BENCH_BC_FILE_PATH}
             HOOK_BC_FILE_PATH ${HOOK_BC_FILE_PATH}
-            INPUT_FILE_DIR ${INPUT_FILE_DIR}
-            INPUT_FILE_NAME_BASE ${INPUT_FILE_NAME_BASE}
+            INPUT_FILE_DIR ${ALL_MARKER_DIR}
+            INPUT_FILE_NAME_BASE ${MARKER_CONFIG_FILE_EXT}
             BB_INFO_INPUT_PATH ${BB_INFO_INPUT_PATH}
             BB_INFO_OUTPUT_DIR ${BB_INFO_OUTPUT_DIR}
             LABEL_TARGET ${LABEL_TARGET}
@@ -410,11 +444,9 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
     
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-nugget-exe")
         
-        if(NOT NUGGET_BC_FILE_DIR OR NOT NUGGET_BC_FILE_BASENAME)
-            message(FATAL_ERROR "NUGGET_BC_FILE_DIR or NUGGET_BC_FILE_BASENAME not defined")
+        if(NOT ALL_NUGGET_RIDS)
+            message(FATAL_ERROR "No ALL_NUGGET_RIDS defined")
         endif()
-
-        set(ALL_TARGETS "")
 
         foreach(rid ${ALL_NUGGET_RIDS})
             set(RID_BC_FILE_PATH ${NUGGET_BC_FILE_DIR}/${NUGGET_BC_FILE_BASENAME}_${rid}/${NUGGET_BC_FILE_BASENAME}_${rid}.bc)
@@ -440,10 +472,17 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         add_custom_target(${TARGET_NAME} ALL DEPENDS ${ALL_TARGETS})
 
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-naive-bc")
+        if("${SOURCE_BC_FILE_PATH}" STREQUAL "" OR "${SOURCE_BC_FILE_BASENAME}" STREQUAL "")
+            message(FATAL_ERROR "No BC_FILE_PATH or BC_FILE_BASENAME")
+        endif()
+        set(BENCH_BC_FILE_PATH ${SOURCE_BC_FILE_PATH}/${SOURCE_BC_FILE_BASENAME}_source_opted_bc/${SOURCE_BC_FILE_BASENAME}_source_opted_bc.bc)
+        if(NOT EXISTS ${BENCH_BC_FILE_PATH})
+            message(FATAL_ERROR "BC file ${BENCH_BC_FILE_PATH} does not exist")
+        endif()
         nugget_naive_bc(
             TARGET ${TARGET_NAME}
             HOOK_TARGET ${HOOK_TARGET}
-            SOURCE_BC_FILE_PATH ${SOURCE_BC_FILE_PATH}
+            SOURCE_BC_FILE_PATH ${BENCH_BC_FILE_PATH}
             HOOK_BC_FILE_PATH ${HOOK_BC_FILE_PATH}
             DEPEND_TARGETS lsms_main_asa lsmscore ${all_libraries_list}
             EXTRA_FLAGS ${EXTRA_FLAGS}
@@ -453,6 +492,12 @@ if(DEFINED ENV{NUGGET_PROCESS_TYPE})
         )
 
     elseif("${NUGGET_PROCESS_TYPE}" STREQUAL "lsms-naive-exe")
+        if (NOT BC_FILE_PATH)
+            message(FATAL_ERROR "No BC_FILE_PATH defined")
+        endif()
+        if(NOT EXISTS ${BC_FILE_PATH})
+            message(FATAL_ERROR "BC file ${BC_FILE_PATH} does not exist")
+        endif()
         nugget_compile_exe(
             TARGET ${TARGET_NAME}
             BC_FILE_PATH ${BC_FILE_PATH}
